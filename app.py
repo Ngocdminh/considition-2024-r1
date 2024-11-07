@@ -6,38 +6,51 @@ import pprint #used to print data structures in readable format
 
 #STEP 2: Setting up variables
 game_url = "api.considition.com" #URL of the game server
-api_key = "" # API-key is sent in mail inbox
-map_file = "Map-Gothenburg.json" # Change map here, the file containing map data for the game
+api_key = "36635d27-7098-440e-abd6-cfafce58e1f5" # API-key is sent in mail inbox
+map_file = "Map-Almhult.json" # Change map here, the file containing map data for the game
 awards_file = "Awards.json"
 personalities_file = "personalities.json"
 
 #STEP 3: Loading the map data
 with open(map_file, "r") as file: #this opens the map file and loads its content into the obj variable as a dictionary
-    obj = json.load(file) 
+    map_file = json.load(file) 
 #with open(awards_file, "r") as awardsfile:
 #   awards_data = json.load(awardsfile)
 #with open(personalities_file, "r") as file:
 #    personalities_data = json.load(file)
 #STEP 4: Initializing game input
 game_input = {                       #a dictionary to store the game data, including map name, loan proposals, and iterations of actions
-    "MapName": "Gothenburg",
+    "MapName": "Almhult",
     "Proposals": [],
     "Iterations": []
 }
 #STEP 5: Defining the Loan Assessment Function
-def assess_loan(customer):
-   credit_score = customer.get("credit_score",0)
-   debt_to_income_ratio = customer.get("debt_to_income_ratio", 0)
-   if credit_score < 600:                    #decides whether to approve or reject a loan based on the customer's credit score and debt-to-income ratio
-      return "Reject"
-   if debt_to_income_ratio > 0.4:
-      return "Reject"
-   return "Approve"
+def assess_loan_approval(customer):
+    monthly_income = customer["income"]
+    monthly_expenses = customer["monthlyExpenses"]
+    loan_amount = customer["loan"]["amount"]
+     # Check to prevent division by zero
+    if monthly_income == 0:
+        return False
+    
+    debt_to_income_ratio = (monthly_expenses + loan_amount / map_file["gameLengthInMonths"]) / monthly_income
+   
+    # Criteria for loan approval
+    if debt_to_income_ratio < 0.4 and customer["capital"] > loan_amount:
+        return True
+    else:
+        return False
+
+# Assess each customer
+for customer in map_file["customers"]:
+    approval = assess_loan_approval(customer)
+    #print(f"Loan approval for {customer['name']}: {'Approved' if approval else 'Denied'}")
+
 #STEP 6: Creating Loan Proposals
-for customer in obj["customers"]:          #this loop goes through each customer in the map data, assesses their loan application, adds approved proposals to the game_input
+for customer in map_file["customers"]:          #this loop goes through each customer in the map data, assesses their loan application, adds approved proposals to the game_input
     game_input["Proposals"].append({
         "CustomerName": customer["name"],
-        "MonthsToPayBackLoan": obj["gameLengthInMonths"],
+        "MonthsToPayBackLoan": map_file["gameLengthInMonths"],
         "YearlyInterestRate": 0.05
     })
 
@@ -46,9 +59,9 @@ action_types = ["Award", "Skip"]         #possible actions for each customer (ei
 #award_types = list(awards_data["Awards"].keys())
 award_types = ["IkeaFoodCoupon", "IkeaDeliveryCheck", "IkeaCheck", "GiftCard", "HalfInterestRate", "NoInterestRate"] #different types of awards that can be given to customers
 #STEP 8: Generating iteration of actions
-for index in range(obj["gameLengthInMonths"]):         #this loop creates a series of actions for each month of the game. 
+for index in range(map_file["gameLengthInMonths"]):         #this loop creates a series of actions for each month of the game. 
   customer_actions_dict = {}
-  for customer in obj['customers']:
+  for customer in map_file['customers']:
     random_index = random.randint(0, len(action_types) - 1)    #it randomly decides whether to give an award or skip, and if giving an award, it randomly selects one customer
     random_type = action_types[random_index];
     random_award = "None" if random_type == "Skip" else random.choice(award_types)
