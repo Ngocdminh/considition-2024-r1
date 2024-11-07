@@ -19,7 +19,7 @@ with open(map_file, "r") as file: #this opens the map file and loads its content
 #with open(personalities_file, "r") as file:
 #    personalities_data = json.load(file)
 #STEP 4: Initializing game input
-game_input = {                       #a dictionary to store the game data, including map name, loan proposals, and iterations of actions
+game_input = {                       #this is a dictionary to store the game data, including map name, loan proposals, and iterations of actions
     "MapName": "Almhult",
     "Proposals": [],
     "Iterations": []
