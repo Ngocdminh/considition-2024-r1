@@ -1,0 +1,24 @@
+import json
+
+# Load the JSON data
+with open("Map-Almhult.json", "r") as file:
+    map_data = json.load(file)
+
+# Function to assess loan approval
+def assess_loan_approval(customer):
+    # Calculate the debt-to-income ratio
+    monthly_income = customer["income"]
+    monthly_expenses = customer["monthlyExpenses"]
+    loan_amount = customer["loan"]["amount"]
+    debt_to_income_ratio = (monthly_expenses + loan_amount / map_data["gameLengthInMonths"]) / monthly_income
+    
+    # Criteria for loan approval
+    if debt_to_income_ratio < 0.4 and customer["capital"] > loan_amount:
+        return True
+    else:
+        return False
+
+# Assess each customer
+for customer in map_data["customers"]:
+    approval = assess_loan_approval(customer)
+    print(f"Loan approval for {customer['name']}: {'Approved' if approval else 'Denied'}")
